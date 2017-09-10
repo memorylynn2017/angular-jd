@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- common meta -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+  <title></title>
+  <link rel="manifest" href="manifest.json">
+  <!-- un-comment this code to enable service worker
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(() => console.log('service worker installed'))
+          .catch(err => console.log('Error', err));
+      }
+    </script>-->
+  <link href="lib/ionic/css/ionic.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
+    <link href="css/ionic.app.css" rel="stylesheet">
+    -->
+  <!-- 这里为什么无需引用angular.js或angular.min.js -->
+  <!-- ionic/angularjs js -->
+  <script src="lib/ionic/js/ionic.bundle.js"></script>
+  <!-- cordova script (this will be a 404 during development) -->
+  <script src="cordova.js"></script>
+  <!-- your app's js -->
+  <script src="js/app.js"></script>
+</head>
+<!-- 这个starter的angular模块是从后台哪里注册的？麻烦老师解释一下？ -->
+
+<body ng-app="starter">
+  <!-- more ion-XXX directive -->
+  <!-- 以下满满都是问题： -->
+  <ion-pane ng-controller="cartList">
+    <ion-header-bar class="bar-stable">
+      <span><i class="icon ion-location"></i></span>
+      <!-- 注意vmodel toEdit变量 -->
+      <button class="button pull-right" ng-if="!toEdit" ng-click="editFunc()">编辑</button>
+      <button class="button pull-right" ng-if="toEdit" ng-click="okFunc()">完成</button>
+    </ion-header-bar>
+    <!-- 强调一下，每一个ion-XXX 都有header content footer类似这些标签 -->
+    <ion-content class="container">
+      <!-- 注意vmodel goodsChecked变量 -->
+      <div class="cart-empty" ng-hide="goodsChecked.length>0">
+        <p><i class="icon ion-ios-information-outline"></i> 您的购物车里还没有商品</p>
+        <div>
+          <button class="button">个人中心</button>
+          <button class="button">立即逛逛</button>
+        </div>
+      </div>
+      <!-- 这里购物车商品显示区域 start-->
+      <!-- 注意vmodel goodsChecked变量 -->
+      <div class="cart-wrap" ng-if="goodsChecked.length">
+        <p class="checkbox-all store-info">
+          <!-- selectAll属性及checkALL方法 1-->
+          <label class="checkbox">
+            <input type="checkbox" ng-checked="selcetAll" ng-click="checkAll()">来自京东</label>
+        </p>
+        <div class="cart-list">
+          <div class="promotion-info">
+            <p><span class="tag">加价购</span>
+              <em>购满128元，可优惠价换购</em>
+              <a href="" class="fr">去凑单 <i class="icon ion-ios-arrow-forward"></i></a></p>
+          </div>
+          <!-- 注意vmodel goodsChecked变量 特别是ITEM遍历-->
+          <div class="goods-info" ng-repeat="item in goodsChecked">
+            <div class="checkbox-all checkbox-wrap fl">
+              <label class="checkbox">
+                <input type="checkbox" ng-checked="item.checked" ng-click="toggleChecked(item)">
+              </label>
+            </div>
+            <div class="goods-details fl">
+              <a href="" class="goods-link">
+                <div class="goods-img"><img ng-src="{{item.image}}" alt=""></div>
+                <div class="goods-info-sub">
+                  <div class="name">{{item.name}}</div>
+                  <div class="dimension-info">
+                    规格：{{item.dimension}}
+                    <i class="icon ion-ios-arrow-forward fr"></i>
+                  </div>
+                  <p><em class="price">￥{{item.price}}</em><em class="weight">{{item.weight}}</em></p>
+                  <!-- 看一下这个按钮组  -->
+                  <div class="button-group">
+                    <button class="button fl" ng-disabled="item.isDisabled" ng-click="decreaseCount(item)"><i class="icon ion-ios-minus-empty"></i></button>
+                    <input type="text" class="fl" ng-model="item.count">
+                    <button class="button fl" ng-click="addCount(item)"><i class="icon ion-ios-plus-empty"></i></button>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 这里购物车商品显示区域 end-->
+      <!-- 你可能还想要 start -->
+      <div class="list-wrap">
+        <p class="shouw-more"><i class="icon"></i>你可能还想要</p>
+        <ion-list>
+          <ion-item ng-repeat="item in goodsData" class="padding item-detail">
+            <div class="list-img">
+              <a href=""><img ng-src="{{item.image}}" alt="" class="list-img"></a>
+            </div>
+            <p class="list-info"><a href="">{{item.name}}</a></p>
+            <div>
+              <span class="price">￥<em>{{item.price}}</em> </span>
+              <button class="button button-cart fr button-small" ng-click="addGoods(item)"><i class="icon ion-ios-cart-outline"></i></button>
+            </div>
+          </ion-item>
+        </ion-list>
+      </div>
+      <!-- 你可能还想要 end -->
+    </ion-content>
+    <!-- 这是尾部部分了  -->
+    <div class="bar bar-footer footer-div">
+      <!-- 非编辑状态的话就消失这个DIV start-->
+      <!-- 注意vmodel toEdit变量 -->
+      <div class="footer-wrap" ng-if="!toEdit">
+        <div class="checkbox-all">
+          <!-- selectAll属性及checkALL方法 2-->
+          <label class="checkbox">
+            <input type="checkbox" ng-checked="selcetAll" ng-click="checkAll()">全选</label>
+        </div>
+        <div class="account-wrap">
+          <div class="account-label">
+            <!-- 除了totalValue还有一个过滤器 -->
+            <h4>总计：<em>￥{{totalValue| number:2}}</em></h4>
+            <p>(不含运费，已优惠￥<em>0.00</em>)</p>
+          </div>
+          <div class="checkout">
+            <button class="button account-btn">去结算<em>({{sum}}件)</em></button>
+          </div>
+        </div>
+      </div>
+      <!-- 非编辑状态的话就消失这个DIV end-->
+
+      <!-- 编辑状态的话就显示这个DIV start-->
+      <!-- 注意vmodel toEdit变量 -->
+      <div class="footer-wrap" ng-if="toEdit">
+        <div class="checkbox-all">
+          <label class="checkbox">
+          <!-- selectAll属性及checkALL方法 2-->
+            <input type="checkbox" ng-checked="selcetAll" ng-click="checkAll()">全选</label>
+        </div>
+        <!-- CSS的量身定做也是很重要的 -->
+        <div class="account-wrap">
+          <div class="checkout">
+            <button class="button button-positive ">分享</button>
+            <button class="button button-dark">移至收藏</button>
+            <button class="button button-energized" ng-click="deleteGood()">删除</button>
+          </div>
+        </div>
+      </div>
+      <!-- 编辑状态的话就显示这个DIV end--> 
+    </div>
+  </ion-pane>
+  <button ng-click="openPopover($event)">打开浮动框</button>
+
+  <!-- 打开浮动框 -->
+  <script id="my-popover.html" type="text/ng-template">
+    <ion-popover-view>
+      <ion-header-bar>
+        <h1 class="title">我的浮动框标题</h1>
+      </ion-header-bar>
+      <ion-content>
+        Hello!
+      </ion-content>
+    </ion-popover-view>
+  </script>
+</body>
+
+</html>
